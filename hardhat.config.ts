@@ -45,6 +45,11 @@ const config: HardhatUserConfig = {
     currency: "USD",
     coinmarketcap: COINMARKETCAP_API_KEY,
   },
+  namedAccounts: {
+    deployer: {
+      default: 0,
+    },
+  },
 };
 
 export default config;

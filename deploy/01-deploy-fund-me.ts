@@ -1,7 +1,20 @@
-import { isModuleNamespaceObject } from "util/types";
+import { HardhatRuntimeEnvironment } from "hardhat/types";
+import { networkConfig } from "../helper-hardhat-config";
 
-function deployFunc() {
-  console.log("HI!");
-}
+module.exports = async ({
+  getNamedAccounts,
+  deployments,
+  network,
+}: HardhatRuntimeEnvironment) => {
+  const { deploy, log } = deployments;
+  const { deployer } = await getNamedAccounts();
+  const chainId: number = network.config.chainId!;
 
-module.exports.default = deployFunc;
+  const ethUsdPriceFeedAddress = networkConfig[chainId]["ethUsdPriceFeed"];
+
+  const fundMe = await deploy("FundMe", {
+    from: deployer,
+    args: [ethUsdPriceFeedAddress],
+    log: true,
+  });
+};

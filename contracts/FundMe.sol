@@ -10,6 +10,8 @@ error CallFailed();
 contract FundMe {
     using PriceConverter for uint256;
 
+    AggregatorV3Interface public priceFeed;
+
     address public immutable i_owner;
     // 21,508 gas - immutable
     // 23,644 gas - non-immutable
@@ -21,13 +23,14 @@ contract FundMe {
     address[] public funders;
     mapping(address => uint256) public addressToAmountFunded;
 
-    constructor() {
+    constructor(address priceFeedAddress) {
         i_owner = msg.sender;
+        priceFeed = AggregatorV3Interface(priceFeedAddress);
     }
 
     function fund() public payable {
         // We want to be able to set a minimum fund amount of 50 USD
-        if(msg.value.getConversionRate() < MINIMUM_USD) { revert FundAmountNotEnough();}
+        if(msg.value.getConversionRate(priceFeed) < MINIMUM_USD) { revert FundAmountNotEnough();}
 
         funders.push(msg.sender);
         addressToAmountFunded[msg.sender] = msg.value;
