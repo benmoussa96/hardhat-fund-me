@@ -23,7 +23,9 @@ const COINMARKETCAP_API_KEY = process.env.COINMARKETCAP_API_KEY;
  * @type impot('hardhat/config').HardhatUserrConfig
  */
 const config: HardhatUserConfig = {
-  solidity: "0.8.17",
+  solidity: {
+    compilers: [{ version: "0.8.17" }, { version: "0.6.6" }],
+  },
   networks: {
     localhost: {
       url: "http://127.0.0.1:8545/",
