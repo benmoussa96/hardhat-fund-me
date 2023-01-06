@@ -1,3 +1,4 @@
+
 node_modules
 .env
 coverage
@@ -5,7 +6,10 @@ coverage.json
 typechain
 typechain-types
 
-# Hardhat files
+#Hardhat files
 cache
 artifacts
-
+.DS_Store
+gas-report.txt
+.notes.md
+deployments
