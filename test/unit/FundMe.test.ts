@@ -33,10 +33,13 @@ describe("FundMe", async () => {
 
   describe("fund()", async () => {
     it("fails if you don't send enough ETH", async () => {
-      await expect(fundMe.fund()).to.be.reverted;
+      await expect(fundMe.fund()).to.be.revertedWithCustomError(
+        fundMe,
+        "FundMe__FundAmountNotEnough"
+      );
     });
 
-    it("updated the amount funded datastructure", async () => {
+    it("updates the amount funded datastructure", async () => {
       await fundMe.fund({ value: sendValue });
 
       const response = await fundMe.addressToAmountFunded(deployer.address);
@@ -58,7 +61,7 @@ describe("FundMe", async () => {
       await fundMe.fund({ value: sendValue });
     });
 
-    it("withdraws ETH from a single funder", async () => {
+    it("withdraws ETH when there is a single funder", async () => {
       const startingFundMeBalance = await fundMe.provider.getBalance(
         fundMe.address
       );
@@ -83,6 +86,57 @@ describe("FundMe", async () => {
       expect(startingDeployerBalance.add(startingFundMeBalance)).to.equal(
         finalDeployerBalance.add(txnGasCost)
       );
+    });
+
+    it("withdraws ETH when there are multiple funders", async () => {
+      const accounts = await ethers.getSigners();
+      for (let i = 0; i < 6; i++) {
+        const fundMeConnectedContract = fundMe.connect(accounts[i]);
+        await fundMeConnectedContract.fund({ value: sendValue });
+      }
+
+      const startingFundMeBalance = await fundMe.provider.getBalance(
+        fundMe.address
+      );
+      const startingDeployerBalance = await fundMe.provider.getBalance(
+        deployer.address
+      );
+
+      const txnResponse = await fundMe.withdraw();
+      const txnReceipt = await txnResponse.wait(1);
+
+      const { gasUsed, effectiveGasPrice } = txnReceipt;
+      const txnGasCost = gasUsed.mul(effectiveGasPrice);
+
+      const finalFundMeBalance = await fundMe.provider.getBalance(
+        fundMe.address
+      );
+      const finalDeployerBalance = await fundMe.provider.getBalance(
+        deployer.address
+      );
+
+      expect(finalFundMeBalance).to.equal(0);
+      expect(startingDeployerBalance.add(startingFundMeBalance)).to.equal(
+        finalDeployerBalance.add(txnGasCost)
+      );
+
+      await expect(fundMe.funders(0)).to.be.reverted;
+
+      for (let i = 0; i < 6; i++) {
+        expect(
+          await fundMe.addressToAmountFunded(accounts[i].address)
+        ).to.equal(0);
+      }
+    });
+
+    it("only allows owner to withdraw funds", async () => {
+      const accounts = await ethers.getSigners();
+      const attacker = accounts[1];
+      const attackerConnectedContract = await fundMe.connect(attacker);
+
+      await expect(
+        attackerConnectedContract.withdraw()
+      ).to.be.revertedWithCustomError(fundMe, "FundMe__NotOwner");
     });
   });
 });
