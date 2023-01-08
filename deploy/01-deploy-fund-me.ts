@@ -27,7 +27,7 @@ const deployFundMe: DeployFunction = async function ({
     from: deployer,
     args: fundMeArgs,
     log: true,
-    waitConfirmations: networkConfig[chainId].blockConfirmations || 1,
+    waitConfirmations: networkConfig[chainId]?.blockConfirmations || 1,
   });
 
   console.log(`FundMe dployed at ${fundMe.address}!`);
