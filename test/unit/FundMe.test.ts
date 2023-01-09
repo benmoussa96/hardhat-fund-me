@@ -138,5 +138,48 @@ describe("FundMe", async () => {
         attackerConnectedContract.withdraw()
       ).to.be.revertedWithCustomError(fundMe, "FundMe__NotOwner");
     });
+
+    // ---------------------------------------------------------------------------------
+
+    it("tests unoptimized withdraw", async () => {
+      const accounts = await ethers.getSigners();
+      for (let i = 0; i < 6; i++) {
+        const fundMeConnectedContract = fundMe.connect(accounts[i]);
+        await fundMeConnectedContract.fund({ value: sendValue });
+      }
+
+      const startingFundMeBalance = await fundMe.provider.getBalance(
+        fundMe.address
+      );
+      const startingDeployerBalance = await fundMe.provider.getBalance(
+        deployer.address
+      );
+
+      const txnResponse = await fundMe.withdrawNotOptimized();
+      const txnReceipt = await txnResponse.wait(1);
+
+      const { gasUsed, effectiveGasPrice } = txnReceipt;
+      const txnGasCost = gasUsed.mul(effectiveGasPrice);
+
+      const finalFundMeBalance = await fundMe.provider.getBalance(
+        fundMe.address
+      );
+      const finalDeployerBalance = await fundMe.provider.getBalance(
+        deployer.address
+      );
+
+      expect(finalFundMeBalance).to.equal(0);
+      expect(startingDeployerBalance.add(startingFundMeBalance)).to.equal(
+        finalDeployerBalance.add(txnGasCost)
+      );
+
+      await expect(fundMe.s_funders(0)).to.be.reverted;
+
+      for (let i = 0; i < 6; i++) {
+        expect(
+          await fundMe.s_addressToAmountFunded(accounts[i].address)
+        ).to.equal(0);
+      }
+    });
   });
 });

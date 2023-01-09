@@ -51,7 +51,7 @@ contract FundMe {
         s_addressToAmountFunded[msg.sender] = msg.value;
     }
 
-    function withdraw() public onlyOwner {
+    function withdrawNotOptimized() public onlyOwner {
         // Reset the mapping
         for (uint256 i = 0; i < s_funders.length; i++) {
             address funder = s_funders[i];
@@ -66,5 +66,23 @@ contract FundMe {
             bool callSuccess, /*bytes memory dataReturned*/
         ) = payable(msg.sender).call{value: address(this).balance}("");
         if(!callSuccess) { revert FundMe__CallFailed(); }
+    }
+
+    function withdraw() public onlyOwner {
+        address[] memory funders = s_funders;
+
+        // Reset the mapping
+        for (uint256 i = 0; i < funders.length; i++) {
+            address funder = funders[i];
+            s_addressToAmountFunded[funder] = 0;
+        }
+
+        // Reset the array
+        s_funders = new address[](0);
+
+        // Call
+        (bool callSuccess,) = payable(msg.sender).call{value: address(this).balance}("");
+        if(!callSuccess) { revert FundMe__CallFailed(); }
+
     }
 }
