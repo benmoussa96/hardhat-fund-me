@@ -26,7 +26,7 @@ describe("FundMe", async () => {
     });
 
     it("sets the aggregator addresses correctly", async () => {
-      const response = await fundMe.priceFeed();
+      const response = await fundMe.s_priceFeed();
       expect(response).to.equal(mockV3Aggregator.address);
     });
   });
@@ -42,15 +42,15 @@ describe("FundMe", async () => {
     it("updates the amount funded datastructure", async () => {
       await fundMe.fund({ value: sendValue });
 
-      const response = await fundMe.addressToAmountFunded(deployer.address);
+      const response = await fundMe.s_addressToAmountFunded(deployer.address);
 
       expect(response).to.equal(sendValue);
     });
 
-    it("adds funder to array of funders", async () => {
+    it("adds funder to array of s_funders", async () => {
       await fundMe.fund({ value: sendValue });
 
-      const response = await fundMe.funders(0);
+      const response = await fundMe.s_funders(0);
 
       expect(response).to.equal(deployer.address);
     });
@@ -88,7 +88,7 @@ describe("FundMe", async () => {
       );
     });
 
-    it("withdraws ETH when there are multiple funders", async () => {
+    it("withdraws ETH when there are multiple s_funders", async () => {
       const accounts = await ethers.getSigners();
       for (let i = 0; i < 6; i++) {
         const fundMeConnectedContract = fundMe.connect(accounts[i]);
@@ -120,11 +120,11 @@ describe("FundMe", async () => {
         finalDeployerBalance.add(txnGasCost)
       );
 
-      await expect(fundMe.funders(0)).to.be.reverted;
+      await expect(fundMe.s_funders(0)).to.be.reverted;
 
       for (let i = 0; i < 6; i++) {
         expect(
-          await fundMe.addressToAmountFunded(accounts[i].address)
+          await fundMe.s_addressToAmountFunded(accounts[i].address)
         ).to.equal(0);
       }
     });
