@@ -16,14 +16,14 @@ error FundMe__CallFailed();
 contract FundMe {
     using PriceConverter for uint256;
 
-    AggregatorV3Interface public priceFeed;
+    AggregatorV3Interface public s_priceFeed;
 
     address public immutable i_owner;
 
     uint256 public constant MINIMUM_USD = 50 * 1e18;
 
-    address[] public funders;
-    mapping(address => uint256) public addressToAmountFunded;
+    address[] public s_funders;
+    mapping(address => uint256) public s_addressToAmountFunded;
 
     modifier onlyOwner() {
         if (msg.sender != i_owner) { revert FundMe__NotOwner(); }
@@ -32,7 +32,7 @@ contract FundMe {
 
     constructor(address priceFeedAddress) {
         i_owner = msg.sender;
-        priceFeed = AggregatorV3Interface(priceFeedAddress);
+        s_priceFeed = AggregatorV3Interface(priceFeedAddress);
     }
 
     receive() external payable {
@@ -45,21 +45,21 @@ contract FundMe {
 
     function fund() public payable {
         // We want to be able to set a minimum fund amount of 50 USD
-        if(msg.value.getConversionRate(priceFeed) < MINIMUM_USD) { revert FundMe__FundAmountNotEnough();}
+        if(msg.value.getConversionRate(s_priceFeed) < MINIMUM_USD) { revert FundMe__FundAmountNotEnough();}
 
-        funders.push(msg.sender);
-        addressToAmountFunded[msg.sender] = msg.value;
+        s_funders.push(msg.sender);
+        s_addressToAmountFunded[msg.sender] = msg.value;
     }
 
     function withdraw() public onlyOwner {
         // Reset the mapping
-        for (uint256 i = 0; i < funders.length; i++) {
-            address funder = funders[i];
-            addressToAmountFunded[funder] = 0;
+        for (uint256 i = 0; i < s_funders.length; i++) {
+            address funder = s_funders[i];
+            s_addressToAmountFunded[funder] = 0;
         }
 
         // Reset the array
-        funders = new address[](0);
+        s_funders = new address[](0);
 
         // Call
         (
