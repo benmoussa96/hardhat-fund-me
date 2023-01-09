@@ -1,6 +1,6 @@
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import { expect } from "chai";
-import { network, deployments, ethers } from "hardhat";
+import { deployments, ethers } from "hardhat";
 import { FundMe, MockV3Aggregator } from "../../typechain-types";
 
 describe("FundMe", async () => {
@@ -139,9 +139,36 @@ describe("FundMe", async () => {
       ).to.be.revertedWithCustomError(fundMe, "FundMe__NotOwner");
     });
 
-    // ---------------------------------------------------------------------------------
+    // --------------------------- UNOPTIMIZED WITHDAW TEST ---------------------------
 
-    it("tests unoptimized withdraw", async () => {
+    it("tests unoptimized withdraw with a single funders", async () => {
+      const startingFundMeBalance = await fundMe.provider.getBalance(
+        fundMe.address
+      );
+      const startingDeployerBalance = await fundMe.provider.getBalance(
+        deployer.address
+      );
+
+      const txnResponse = await fundMe.withdrawNotOptimized();
+      const txnReceipt = await txnResponse.wait(1);
+
+      const { gasUsed, effectiveGasPrice } = txnReceipt;
+      const txnGasCost = gasUsed.mul(effectiveGasPrice);
+
+      const finalFundMeBalance = await fundMe.provider.getBalance(
+        fundMe.address
+      );
+      const finalDeployerBalance = await fundMe.provider.getBalance(
+        deployer.address
+      );
+
+      expect(finalFundMeBalance).to.equal(0);
+      expect(startingDeployerBalance.add(startingFundMeBalance)).to.equal(
+        finalDeployerBalance.add(txnGasCost)
+      );
+    });
+
+    it("tests unoptimized withdraw with multiple funders", async () => {
       const accounts = await ethers.getSigners();
       for (let i = 0; i < 6; i++) {
         const fundMeConnectedContract = fundMe.connect(accounts[i]);
