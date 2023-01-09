@@ -21,12 +21,12 @@ describe("FundMe", async () => {
 
   describe("constructor()", () => {
     it("sets the owner addresses correctly", async () => {
-      const response = await fundMe.i_owner();
+      const response = await fundMe.getOwner();
       expect(response).to.equal(deployer.address);
     });
 
     it("sets the aggregator addresses correctly", async () => {
-      const response = await fundMe.s_priceFeed();
+      const response = await fundMe.getPriceFeed();
       expect(response).to.equal(mockV3Aggregator.address);
     });
   });
@@ -42,7 +42,7 @@ describe("FundMe", async () => {
     it("updates the amount funded datastructure", async () => {
       await fundMe.fund({ value: sendValue });
 
-      const response = await fundMe.s_addressToAmountFunded(deployer.address);
+      const response = await fundMe.getAmountFundedByAddress(deployer.address);
 
       expect(response).to.equal(sendValue);
     });
@@ -50,7 +50,7 @@ describe("FundMe", async () => {
     it("adds funder to array of s_funders", async () => {
       await fundMe.fund({ value: sendValue });
 
-      const response = await fundMe.s_funders(0);
+      const response = await fundMe.getFunder(0);
 
       expect(response).to.equal(deployer.address);
     });
@@ -120,11 +120,11 @@ describe("FundMe", async () => {
         finalDeployerBalance.add(txnGasCost)
       );
 
-      await expect(fundMe.s_funders(0)).to.be.reverted;
+      await expect(fundMe.getFunder(0)).to.be.reverted;
 
       for (let i = 0; i < 6; i++) {
         expect(
-          await fundMe.s_addressToAmountFunded(accounts[i].address)
+          await fundMe.getAmountFundedByAddress(accounts[i].address)
         ).to.equal(0);
       }
     });
@@ -139,74 +139,74 @@ describe("FundMe", async () => {
       ).to.be.revertedWithCustomError(fundMe, "FundMe__NotOwner");
     });
 
-    // --------------------------- UNOPTIMIZED WITHDAW TEST ---------------------------
+    // ------------------- TESTING THE UNOPTIMIZED VERSION OF WITHDAW -------------------
 
-    it("tests unoptimized withdraw with a single funders", async () => {
-      const startingFundMeBalance = await fundMe.provider.getBalance(
-        fundMe.address
-      );
-      const startingDeployerBalance = await fundMe.provider.getBalance(
-        deployer.address
-      );
+    // it("tests unoptimized withdraw with a single funders", async () => {
+    //   const startingFundMeBalance = await fundMe.provider.getBalance(
+    //     fundMe.address
+    //   );
+    //   const startingDeployerBalance = await fundMe.provider.getBalance(
+    //     deployer.address
+    //   );
 
-      const txnResponse = await fundMe.withdrawNotOptimized();
-      const txnReceipt = await txnResponse.wait(1);
+    //   const txnResponse = await fundMe.withdrawNotOptimized();
+    //   const txnReceipt = await txnResponse.wait(1);
 
-      const { gasUsed, effectiveGasPrice } = txnReceipt;
-      const txnGasCost = gasUsed.mul(effectiveGasPrice);
+    //   const { gasUsed, effectiveGasPrice } = txnReceipt;
+    //   const txnGasCost = gasUsed.mul(effectiveGasPrice);
 
-      const finalFundMeBalance = await fundMe.provider.getBalance(
-        fundMe.address
-      );
-      const finalDeployerBalance = await fundMe.provider.getBalance(
-        deployer.address
-      );
+    //   const finalFundMeBalance = await fundMe.provider.getBalance(
+    //     fundMe.address
+    //   );
+    //   const finalDeployerBalance = await fundMe.provider.getBalance(
+    //     deployer.address
+    //   );
 
-      expect(finalFundMeBalance).to.equal(0);
-      expect(startingDeployerBalance.add(startingFundMeBalance)).to.equal(
-        finalDeployerBalance.add(txnGasCost)
-      );
-    });
+    //   expect(finalFundMeBalance).to.equal(0);
+    //   expect(startingDeployerBalance.add(startingFundMeBalance)).to.equal(
+    //     finalDeployerBalance.add(txnGasCost)
+    //   );
+    // });
 
-    it("tests unoptimized withdraw with multiple funders", async () => {
-      const accounts = await ethers.getSigners();
-      for (let i = 0; i < 6; i++) {
-        const fundMeConnectedContract = fundMe.connect(accounts[i]);
-        await fundMeConnectedContract.fund({ value: sendValue });
-      }
+    // it("tests unoptimized withdraw with multiple funders", async () => {
+    //   const accounts = await ethers.getSigners();
+    //   for (let i = 0; i < 6; i++) {
+    //     const fundMeConnectedContract = fundMe.connect(accounts[i]);
+    //     await fundMeConnectedContract.fund({ value: sendValue });
+    //   }
 
-      const startingFundMeBalance = await fundMe.provider.getBalance(
-        fundMe.address
-      );
-      const startingDeployerBalance = await fundMe.provider.getBalance(
-        deployer.address
-      );
+    //   const startingFundMeBalance = await fundMe.provider.getBalance(
+    //     fundMe.address
+    //   );
+    //   const startingDeployerBalance = await fundMe.provider.getBalance(
+    //     deployer.address
+    //   );
 
-      const txnResponse = await fundMe.withdrawNotOptimized();
-      const txnReceipt = await txnResponse.wait(1);
+    //   const txnResponse = await fundMe.withdrawNotOptimized();
+    //   const txnReceipt = await txnResponse.wait(1);
 
-      const { gasUsed, effectiveGasPrice } = txnReceipt;
-      const txnGasCost = gasUsed.mul(effectiveGasPrice);
+    //   const { gasUsed, effectiveGasPrice } = txnReceipt;
+    //   const txnGasCost = gasUsed.mul(effectiveGasPrice);
 
-      const finalFundMeBalance = await fundMe.provider.getBalance(
-        fundMe.address
-      );
-      const finalDeployerBalance = await fundMe.provider.getBalance(
-        deployer.address
-      );
+    //   const finalFundMeBalance = await fundMe.provider.getBalance(
+    //     fundMe.address
+    //   );
+    //   const finalDeployerBalance = await fundMe.provider.getBalance(
+    //     deployer.address
+    //   );
 
-      expect(finalFundMeBalance).to.equal(0);
-      expect(startingDeployerBalance.add(startingFundMeBalance)).to.equal(
-        finalDeployerBalance.add(txnGasCost)
-      );
+    //   expect(finalFundMeBalance).to.equal(0);
+    //   expect(startingDeployerBalance.add(startingFundMeBalance)).to.equal(
+    //     finalDeployerBalance.add(txnGasCost)
+    //   );
 
-      await expect(fundMe.s_funders(0)).to.be.reverted;
+    //   await expect(fundMe.getFunder(0)).to.be.reverted;
 
-      for (let i = 0; i < 6; i++) {
-        expect(
-          await fundMe.s_addressToAmountFunded(accounts[i].address)
-        ).to.equal(0);
-      }
-    });
+    //   for (let i = 0; i < 6; i++) {
+    //     expect(
+    //       await fundMe.getAmountFundedByAddress(accounts[i].address)
+    //     ).to.equal(0);
+    //   }
+    // });
   });
 });

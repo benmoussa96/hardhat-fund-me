@@ -16,14 +16,14 @@ error FundMe__CallFailed();
 contract FundMe {
     using PriceConverter for uint256;
 
-    AggregatorV3Interface public s_priceFeed;
+    AggregatorV3Interface private s_priceFeed;
 
-    address public immutable i_owner;
+    address private immutable i_owner;
 
     uint256 public constant MINIMUM_USD = 50 * 1e18;
 
-    address[] public s_funders;
-    mapping(address => uint256) public s_addressToAmountFunded;
+    address[] private s_funders;
+    mapping(address => uint256) private s_addressToAmountFunded;
 
     modifier onlyOwner() {
         if (msg.sender != i_owner) { revert FundMe__NotOwner(); }
@@ -51,29 +51,12 @@ contract FundMe {
         s_addressToAmountFunded[msg.sender] = msg.value;
     }
 
-    function withdrawNotOptimized() public onlyOwner {
-        // Reset the mapping
-        for (uint256 i = 0; i < s_funders.length; i++) {
-            address funder = s_funders[i];
-            s_addressToAmountFunded[funder] = 0;
-        }
-
-        // Reset the array
-        s_funders = new address[](0);
-
-        // Call
-        (
-            bool callSuccess, /*bytes memory dataReturned*/
-        ) = payable(msg.sender).call{value: address(this).balance}("");
-        if(!callSuccess) { revert FundMe__CallFailed(); }
-    }
-
     function withdraw() public onlyOwner {
-        address[] memory funders = s_funders;
+        address[] memory memoryFunders = s_funders;
 
         // Reset the mapping
-        for (uint256 i = 0; i < funders.length; i++) {
-            address funder = funders[i];
+        for (uint256 i = 0; i < memoryFunders.length; i++) {
+            address funder = memoryFunders[i];
             s_addressToAmountFunded[funder] = 0;
         }
 
@@ -85,4 +68,37 @@ contract FundMe {
         if(!callSuccess) { revert FundMe__CallFailed(); }
 
     }
+
+    function getOwner() public view returns (address) {
+      return i_owner;
+    }
+
+    function getFunder(uint256 index) public view returns (address) {
+        return s_funders[index];
+    }
+
+    function getAmountFundedByAddress(address funder) public view returns (uint256) {
+        return s_addressToAmountFunded[funder];
+    }
+
+    function getPriceFeed() public view returns (AggregatorV3Interface) {
+        return s_priceFeed;
+    }
+
+    // function withdrawNotOptimized() public onlyOwner {
+    //     // Reset the mapping
+    //     for (uint256 i = 0; i < s_funders.length; i++) {
+    //         address funder = s_funders[i];
+    //         s_addressToAmountFunded[funder] = 0;
+    //     }
+
+    //     // Reset the array
+    //     s_funders = new address[](0);
+
+    //     // Call
+    //     (
+    //         bool callSuccess, /*bytes memory dataReturned*/
+    //     ) = payable(msg.sender).call{value: address(this).balance}("");
+    //     if(!callSuccess) { revert FundMe__CallFailed(); }
+    // }
 }
