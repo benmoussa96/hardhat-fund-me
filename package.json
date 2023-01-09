@@ -1,4 +1,7 @@
 {
+  "name": "hardhat-fund-me",
+  "author": "Ghaieth BEN MOUSSA",
+  "version": "1.0.0",
   "devDependencies": {
     "@chainlink/contracts": "^0.5.1",
     "@ethersproject/abi": "^5.4.7",
@@ -23,5 +26,19 @@
     "ts-node": ">=8.0.0",
     "typechain": "^8.1.0",
     "typescript": ">=4.5.0"
+  },
+  "scripts": {
+    "compile": "yarn hardhat compile",
+    "deploy": "yarn hardhat deploy",
+    "deploy:goerli": "yarn hardhat deploy --network goerli",
+    "fund": "yarn hardhat run scripts/fund.ts",
+    "fund:goerli": "yarn hardhat run scripts/fund.ts --network goerli",
+    "withdraw": "yarn hardhat run scripts/withdraw.ts",
+    "withdraw:goerli": "yarn hardhat run scripts/withdraw.ts --network goerli",
+    "test": "yarn hardhat test",
+    "test:staging": "yarn hardhat test --network goerli",
+    "lint": "yarn solhint 'contracts/*.sol'",
+    "format": "yarn prettier --write",
+    "coverage": "yarn hardhat coverage"
   }
 }
