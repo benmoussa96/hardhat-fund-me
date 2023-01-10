@@ -146,7 +146,9 @@ import { FundMe, MockV3Aggregator } from "../../typechain-types";
             attackerConnectedContract.withdraw()
           ).to.be.revertedWithCustomError(fundMe, "FundMe__NotOwner");
         });
+      });
 
+      describe("fallback() & receive()", async () => {
         it("should invoke the fallback function", async () => {
           const nonExistentFuncSignature = "nonExistentFunc(uint256,uint256)";
           const fakeFundMe = new ethers.Contract(
