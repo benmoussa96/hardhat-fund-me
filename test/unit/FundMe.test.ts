@@ -27,13 +27,13 @@ import { FundMe, MockV3Aggregator } from "../../typechain-types";
 
       describe("constructor()", () => {
         it("sets the owner addresses correctly", async () => {
-          const response = await fundMe.getOwner();
-          expect(response).to.equal(deployer.address);
+          const txnResponse = await fundMe.getOwner();
+          expect(txnResponse).to.equal(deployer.address);
         });
 
         it("sets the aggregator addresses correctly", async () => {
-          const response = await fundMe.getPriceFeed();
-          expect(response).to.equal(mockV3Aggregator.address);
+          const txnResponse = await fundMe.getPriceFeed();
+          expect(txnResponse).to.equal(mockV3Aggregator.address);
         });
       });
 
@@ -48,19 +48,19 @@ import { FundMe, MockV3Aggregator } from "../../typechain-types";
         it("updates the amount funded datastructure", async () => {
           await fundMe.fund({ value: sendValue });
 
-          const response = await fundMe.getAmountFundedByAddress(
+          const txnResponse = await fundMe.getAmountFundedByAddress(
             deployer.address
           );
 
-          expect(response).to.equal(sendValue);
+          expect(txnResponse).to.equal(sendValue);
         });
 
         it("adds funder to array of funders", async () => {
           await fundMe.fund({ value: sendValue });
 
-          const response = await fundMe.getFunder(0);
+          const txnResponse = await fundMe.getFunder(0);
 
-          expect(response).to.equal(deployer.address);
+          expect(txnResponse).to.equal(deployer.address);
         });
       });
 
@@ -145,6 +145,37 @@ import { FundMe, MockV3Aggregator } from "../../typechain-types";
           await expect(
             attackerConnectedContract.withdraw()
           ).to.be.revertedWithCustomError(fundMe, "FundMe__NotOwner");
+        });
+
+        it("should invoke the fallback function", async () => {
+          const nonExistentFuncSignature = "nonExistentFunc(uint256,uint256)";
+          const fakeFundMe = new ethers.Contract(
+            fundMe.address,
+            [
+              ...fundMe.interface.fragments,
+              `function ${nonExistentFuncSignature}`,
+            ],
+            deployer
+          );
+
+          const txnResponse = fakeFundMe[nonExistentFuncSignature](8, 9);
+          await expect(txnResponse).to.be.revertedWithCustomError(
+            fundMe,
+            "FundMe__FundAmountNotEnough"
+          );
+        });
+
+        it("should invoke the receive function", async () => {
+          const txnHash = await deployer.sendTransaction({
+            to: fundMe.address,
+            value: sendValue,
+          });
+
+          const txnResponse = await fundMe.getAmountFundedByAddress(
+            deployer.address
+          );
+
+          expect(txnResponse).to.equal(sendValue);
         });
 
         // ------------------- TESTING THE UNOPTIMIZED VERSION OF WITHDAW -------------------
