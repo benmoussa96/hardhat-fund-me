@@ -45,7 +45,7 @@ import { FundMe, MockV3Aggregator } from "../../typechain-types";
           );
         });
 
-        it("updates the amount funded datastructure", async () => {
+        it("updates the amount funded for each funder", async () => {
           await fundMe.fund({ value: sendValue });
 
           const txnResponse = await fundMe.getAmountFundedByAddress(
@@ -149,27 +149,23 @@ import { FundMe, MockV3Aggregator } from "../../typechain-types";
       });
 
       describe("fallback() & receive()", async () => {
-        it("should invoke the fallback function", async () => {
-          const nonExistentFuncSignature = "nonExistentFunc(uint256,uint256)";
-          const fakeFundMe = new ethers.Contract(
-            fundMe.address,
-            [
-              ...fundMe.interface.fragments,
-              `function ${nonExistentFuncSignature}`,
-            ],
-            deployer
+        it("invokes receive() when msg.data is empty", async () => {
+          await deployer.sendTransaction({
+            to: fundMe.address,
+            value: sendValue,
+          });
+
+          const txnResponse = await fundMe.getAmountFundedByAddress(
+            deployer.address
           );
 
-          const txnResponse = fakeFundMe[nonExistentFuncSignature](8, 9);
-          await expect(txnResponse).to.be.revertedWithCustomError(
-            fundMe,
-            "FundMe__FundAmountNotEnough"
-          );
+          expect(txnResponse).to.equal(sendValue);
         });
 
-        it("should invoke the receive function", async () => {
-          const txnHash = await deployer.sendTransaction({
+        it("invokes fallback() when msg.data isn't empty", async () => {
+          await deployer.sendTransaction({
             to: fundMe.address,
+            data: "0x00000000",
             value: sendValue,
           });
 
