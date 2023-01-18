@@ -30,7 +30,7 @@ const deployFundMe: DeployFunction = async function ({
     waitConfirmations: networkConfig[chainId]?.blockConfirmations || 1,
   });
 
-  console.log(`FundMe dployed at ${fundMe.address}!`);
+  console.log(`FundMe deployed at ${fundMe.address}!`);
   console.log("-------------------------------------------");
 
   if (
